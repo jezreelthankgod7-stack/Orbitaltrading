@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stock markets — Orbital</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="market-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script src="app.js"></script>
+<script src="dashboard-shell.js"></script>
+<script src="market-page.js"></script>
+<script>
+App.ready.then(async () => {
+renderMarketPage({ active: 'stocks', title: 'Stocks', category: 'stocks' });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Create your Orbital account</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card">
+    <a href="/home.html" class="brand">
+      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 3l7 7-7 7v-4H3v-6h11V3z"/></svg></span>
+      Orbital
+    </a>
+    <h1>Create your account</h1>
+    <p class="sub">Start investing in SpaceX, Tesla and crypto in seconds.</p>
+    <form id="form" autocomplete="off">
+      <div class="field"><label>Full name</label><input name="full_name" required placeholder="Ada Lovelace" /></div>
+      <div class="field-row">
+        <div class="field"><label>Username</label><input name="username" required pattern="[a-zA-Z0-9_]{3,20}" placeholder="ada" /></div>
+        <div class="field"><label>Phone</label><input name="phone" required placeholder="+1 555 123 4567" /></div>
+      </div>
+      <div class="field"><label>Email</label><input name="email" type="email" required placeholder="you@example.com" /></div>
+      <div class="field">
+        <label>Country</label>
+        <select name="country" required id="country"><option value="">Select country…</option></select>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Password</label><input name="password" type="password" required minlength="6" /></div>
+        <div class="field"><label>Confirm</label><input name="confirm" type="password" required minlength="6" /></div>
+      </div>
+      <div class="err" id="err"></div>
+      <button class="btn btn-primary btn-block" type="submit">Create account</button>
+    </form>
+    <div class="auth-foot">Already have an account? <a href="/login.html">Sign in</a></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script src="app.js"></script>
+<script>
+const COUNTRIES = ["United States","United Kingdom","Canada","Australia","Germany","France","Spain","Italy","Netherlands","Sweden","Norway","Denmark","Switzerland","Japan","South Korea","Singapore","Hong Kong","India","UAE","Saudi Arabia","South Africa","Nigeria","Kenya","Ghana","Egypt","Brazil","Mexico","Argentina","Chile","Colombia","Portugal","Ireland","Belgium","Austria","Poland","Czech Republic","Finland","New Zealand","Turkey","Israel"];
+const sel = document.getElementById('country');
+COUNTRIES.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const err = document.getElementById('err'); err.textContent = '';
+  if (fd.get('password') !== fd.get('confirm')) { err.textContent = 'Passwords do not match'; return; }
+  try {
+    await App.Auth.signup({
+      full_name: fd.get('full_name').trim(),
+      username: fd.get('username').trim(),
+      email: fd.get('email').trim().toLowerCase(),
+      phone: fd.get('phone').trim(),
+      country: fd.get('country'),
+      password: fd.get('password'),
+    });
+    window.location.href = '/dashboard.html';
+  } catch (ex) { err.textContent = ex.message; }
+});
+</script>
+</body>
+</html>

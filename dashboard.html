@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard — Orbital</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="market-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script src="app.js"></script>
+<script src="dashboard-shell.js"></script>
+<script>
+App.ready.then(async () => {
+
+const s = renderShell({ active: 'overview', title: 'Overview' });
+if (s) {
+  document.getElementById('app').innerHTML = s.sidebar + `
+    <main class="main">
+      ${s.appbar}
+      <div class="page">
+        <div class="stats-row">
+          <div class="stat-card"><div class="lbl">Cash balance</div><div class="val">$${s.user.balance.toLocaleString()}</div><div class="sub">Available to invest</div></div>
+          <div class="stat-card"><div class="lbl">Open P/L</div><div class="val" id="openPL">$0.00</div><div class="sub">Unrealized · live</div></div>
+          <div class="stat-card"><div class="lbl">Positions</div><div class="val" id="posCount">0</div><div class="sub">Across all markets</div></div>
+          <div class="stat-card"><div class="lbl">Account tier</div><div class="val">Orbital</div><div class="sub">Free upgrades available</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Your open positions</h3><span style="color:var(--text-mute);font-size:12px;">Live P/L</span></div>
+          <div id="positions"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Top movers</h3>
+            <span style="color:var(--text-mute);font-size:12px;">Live · updates every 1.5s</span>
+          </div>
+          <div class="markets-grid" id="movers"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Recent activity</h3><a href="/history.html" style="color:var(--primary);font-size:13px;">View all →</a></div>
+          <div id="recent" class="table-wrap"></div>
+        </div>
+      </div>
+    </main>`;
+
+  const movers = ['TSLA','BTC','RKLB','ETH','ASTS','SOL','NVDA','EUR/USD'].map(s => Market.ALL[s]);
+  const moversEl = document.getElementById('movers');
+  function buildMovers() {
+    moversEl.innerHTML = movers.map(i => `
+      <div class="market-tile" data-snap="${i.sym}">
+        <div class="sym-row">
+          <div><div class="sym">${i.sym}</div><div class="name">${i.name}</div></div>
+          <div class="change ${i.changePct >= 0 ? 'up' : 'down'}" style="padding:3px 8px;border-radius:6px;">${Market.fmtPct(i.changePct)}</div>
+        </div>
+        <div class="price" data-price>${Market.fmtPrice(i.price)}</div>
+        <canvas class="spark"></canvas>
+      </div>`).join('');
+    document.querySelectorAll('.market-tile').forEach(t => {
+      const i = Market.ALL[t.dataset.snap];
+      Market.drawSpark(t.querySelector('canvas'), i.history, i.changePct >= 0 ? '#4ade80' : '#f87171');
+    });
+  }
+  buildMovers();
+
+  function fmtMoney(n) { return (n>=0?'+':'-') + '$' + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  function renderSummary() {
+    const u = App.Auth.getUser();
+    const { openPL, positions } = App.Portfolio.summary(u.id);
+    const elPL = document.getElementById('openPL');
+    elPL.textContent = fmtMoney(openPL);
+    elPL.style.color = openPL >= 0 ? 'var(--success)' : 'var(--danger)';
+    document.getElementById('posCount').textContent = positions;
+  }
+
+  function renderPositions() {
+    const u = App.Auth.getUser();
+    const holdings = App.Portfolio.holdings(u.id);
+    const invs = App.Portfolio.investments(u.id);
+    const el = document.getElementById('positions');
+    if (holdings.length === 0 && invs.length === 0) {
+      el.innerHTML = '<p style="color:var(--text-mute);margin:0;">No open positions yet. Start trading from <a href="/invest.html" style="color:var(--primary)">Invest</a>, <a href="/crypto.html" style="color:var(--primary)">Crypto</a>, <a href="/stocks.html" style="color:var(--primary)">Stocks</a> or <a href="/forex.html" style="color:var(--primary)">Forex</a>.</p>';
+      return;
+    }
+    const rows = [];
+    holdings.forEach(h => {
+      const i = Market.ALL[h.symbol]; if (!i) return;
+      const mv = i.price * h.qty;
+      const pl = mv - h.costBasis;
+      const plPct = (pl / h.costBasis) * 100;
+      rows.push(`<tr>
+        <td><strong>${h.symbol}</strong></td>
+        <td>${h.qty.toLocaleString(undefined,{maximumFractionDigits:6})}</td>
+        <td>$${Market.fmtPrice(h.avgPrice)}</td>
+        <td data-pl="${h.symbol}">$${Market.fmtPrice(i.price)}</td>
+        <td>$${Market.fmtPrice(mv)}</td>
+        <td><span class="chg ${pl>=0?'up':'down'}">${pl>=0?'+':''}$${Market.fmtPrice(pl)} (${plPct.toFixed(2)}%)</span></td>
+      </tr>`);
+    });
+    const spx = Market.ALL['SPACEX'];
+    invs.forEach(inv => {
+      const mv = spx.price * inv.shares;
+      const cost = inv.entryPrice * inv.shares;
+      const pl = mv - cost;
+      const plPct = (pl / cost) * 100;
+      rows.push(`<tr>
+        <td><strong>SPACEX</strong> <span style="color:var(--text-mute);font-size:11px;">· ${inv.duration}</span></td>
+        <td>${inv.shares}</td>
+        <td>$${Market.fmtPrice(inv.entryPrice)}</td>
+        <td>$${Market.fmtPrice(spx.price)}</td>
+        <td>$${Market.fmtPrice(mv)}</td>
+        <td><span class="chg ${pl>=0?'up':'down'}">${pl>=0?'+':''}$${Market.fmtPrice(pl)} (${plPct.toFixed(2)}%)</span></td>
+      </tr>`);
+    });
+    el.innerHTML = `<div class="table-wrap"><table class="tbl"><thead><tr><th>Symbol</th><th>Qty</th><th>Avg entry</th><th>Current</th><th>Market value</th><th>P/L</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+  }
+  renderSummary();
+  renderPositions();
+
+  // recent orders
+  const orders = App.Orders.forUser(s.user.id).slice(0, 5);
+  document.getElementById('recent').innerHTML = orders.length === 0
+    ? '<p style="color:var(--text-mute);margin:0;">No orders yet. Visit a market to place your first trade.</p>'
+    : `<div class="table-wrap"><table class="tbl"><thead><tr><th>When</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th></tr></thead><tbody>` +
+      orders.map(o => `<tr><td>${new Date(o.at).toLocaleString()}</td><td>${o.symbol}</td><td><span class="chg ${o.side==='buy'?'up':'down'}">${o.side.toUpperCase()}</span></td><td>${o.qty}</td><td>$${Market.fmtPrice(o.price)}</td></tr>`).join('') +
+      '</tbody></table></div>';
+
+  document.addEventListener('market:tick', () => {
+    document.querySelectorAll('.market-tile').forEach(t => {
+      const i = Market.ALL[t.dataset.snap];
+      App.animatePrice(t.querySelector('[data-price]'), i.price, i.prevPrice, Market.fmtPrice);
+      Market.drawSpark(t.querySelector('canvas'), i.history, i.changePct >= 0 ? '#4ade80' : '#f87171');
+      const ch = t.querySelector('.change');
+      ch.textContent = Market.fmtPct(i.changePct);
+      ch.className = 'change ' + (i.changePct >= 0 ? 'up' : 'down');
+    });
+    renderSummary();
+    renderPositions();
+  });
+}
+
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Order history — Orbital</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="market-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script src="app.js"></script>
+<script src="dashboard-shell.js"></script>
+<script>
+App.ready.then(async () => {
+
+const s = renderShell({ active: 'history', title: 'Order history' });
+if (s) {
+  const orders = App.Orders.forUser(s.user.id);
+  const buys = orders.filter(o => o.side === 'buy').reduce((a,b)=>a+b.total,0);
+  const sells = orders.filter(o => o.side === 'sell').reduce((a,b)=>a+b.total,0);
+  document.getElementById('app').innerHTML = s.sidebar + `
+    <main class="main">${s.appbar}
+      <div class="page">
+        <div class="stats-row">
+          <div class="stat-card"><div class="lbl">Total orders</div><div class="val">${orders.length}</div></div>
+          <div class="stat-card"><div class="lbl">Total bought</div><div class="val">$${buys.toLocaleString(undefined,{maximumFractionDigits:2})}</div></div>
+          <div class="stat-card"><div class="lbl">Total sold</div><div class="val">$${sells.toLocaleString(undefined,{maximumFractionDigits:2})}</div></div>
+          <div class="stat-card"><div class="lbl">Net flow</div><div class="val" style="color:${sells-buys>=0?'var(--success)':'var(--danger)'}">$${(sells-buys).toLocaleString(undefined,{maximumFractionDigits:2})}</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>All orders</h3></div>
+          ${orders.length === 0
+            ? '<p style="color:var(--text-mute);margin:0;">No orders yet. Head to <a href="/crypto.html" style="color:var(--primary)">Crypto</a>, <a href="/stocks.html" style="color:var(--primary)">Stocks</a>, or <a href="/forex.html" style="color:var(--primary)">Forex</a> to place your first trade.</p>'
+            : `<div class="table-wrap"><table class="tbl"><thead><tr><th>When</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${
+              orders.map(o => `<tr>
+                <td>${new Date(o.at).toLocaleString()}</td>
+                <td><strong>${o.symbol}</strong></td>
+                <td><span class="chg ${o.side==='buy'?'up':'down'}">${o.side.toUpperCase()}</span></td>
+                <td>${o.qty}</td>
+                <td>$${Market.fmtPrice(o.price)}</td>
+                <td>$${Market.fmtPrice(o.total)}</td>
+              </tr>`).join('')
+            }</tbody></table></div>`}
+        </div>
+      </div>
+    </main>`;
+}
+
+});
+</script>
+</body>
+</html>

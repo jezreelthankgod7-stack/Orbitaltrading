@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profile — Orbital</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script src="app.js"></script>
+<script src="dashboard-shell.js"></script>
+<script>
+App.ready.then(async () => {
+
+const s = renderShell({ active: 'profile', title: 'Profile' });
+if (s) {
+  const u = s.user;
+  document.getElementById('app').innerHTML = s.sidebar + `
+    <main class="main">${s.appbar}
+      <div class="page">
+        <div class="panel" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+          <div class="av" style="width:72px;height:72px;border-radius:50%;background:var(--grad-primary);color:#06112a;display:grid;place-items:center;font-weight:800;font-size:26px;">${(u.full_name||u.username).split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase()}</div>
+          <div style="flex:1;min-width:200px;">
+            <h2 style="margin:0;">${u.full_name}</h2>
+            <div style="color:var(--text-mute);">@${u.username} · Member since ${new Date(u.createdAt).toLocaleDateString()}</div>
+          </div>
+          <button class="btn btn-danger" onclick="App.Auth.logout()">Sign out</button>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0;">Account details</h3>
+          <form id="profForm">
+            <div class="field-row">
+              <div class="field"><label>Full name</label><input name="full_name" value="${u.full_name}" /></div>
+              <div class="field"><label>Username</label><input name="username" value="${u.username}" disabled /></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Email</label><input name="email" type="email" value="${u.email}" /></div>
+              <div class="field"><label>Phone</label><input name="phone" value="${u.phone||''}" /></div>
+            </div>
+            <div class="field"><label>Country</label><input name="country" value="${u.country||''}" /></div>
+            <button class="btn btn-primary" type="submit">Save changes</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0;">Account balance</h3>
+          <div style="display:flex;align-items:baseline;gap:14px;">
+            <div style="font-size:32px;font-weight:800;">$${u.balance.toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+            <div style="color:var(--text-dim);">USD available cash</div>
+          </div>
+          <p style="color:var(--text-mute);font-size:13px;margin-top:10px;">Paper trading account.</p>
+        </div>
+      </div>
+    </main>`;
+
+  document.getElementById('profForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    await App.Auth.updateUser({
+      full_name: fd.get('full_name'),
+      email: fd.get('email'),
+      phone: fd.get('phone'),
+      country: fd.get('country'),
+    });
+    App.toast('Profile updated');
+  });
+}
+
+});
+</script>
+</body>
+</html>

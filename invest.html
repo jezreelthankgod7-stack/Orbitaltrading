@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Invest in SpaceX — Orbital</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="market-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script src="app.js"></script>
+<script src="dashboard-shell.js"></script>
+<script>
+App.ready.then(async () => {
+
+const DURATIONS = [
+  { id: '1h',  label: '1 Hour',   ms: 3600e3,        apr: 0.05 },
+  { id: '1d',  label: '1 Day',    ms: 86400e3,       apr: 0.12 },
+  { id: '7d',  label: '7 Days',   ms: 7*86400e3,     apr: 0.28 },
+  { id: '30d', label: '30 Days',  ms: 30*86400e3,    apr: 0.65 },
+  { id: '90d', label: '90 Days',  ms: 90*86400e3,    apr: 1.20 },
+];
+
+const s = renderShell({ active: 'invest', title: 'Invest in SpaceX' });
+if (s) {
+  document.getElementById('app').innerHTML = s.sidebar + `
+    <main class="main">
+      ${s.appbar}
+      <div class="page">
+        <div class="panel" style="background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(168,85,247,.08));border:1px solid rgba(99,102,241,.3);">
+          <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:11px;letter-spacing:.15em;color:var(--text-mute);text-transform:uppercase;">SpaceX · Private Equity Share</div>
+              <div style="display:flex;align-items:baseline;gap:14px;margin-top:6px;">
+                <div id="livePrice" style="font-size:42px;font-weight:800;font-variant-numeric:tabular-nums;"></div>
+                <div id="liveChg" class="change" style="padding:5px 12px;border-radius:8px;font-weight:700;"></div>
+              </div>
+              <div style="color:var(--text-mute);font-size:13px;margin-top:6px;">Live valuation · updates every 1.5s · returns track share price</div>
+            </div>
+            <div style="flex:1;min-width:240px;max-width:420px;height:90px;"><canvas id="hero"></canvas></div>
+          </div>
+        </div>
+
+        <div class="trade-grid">
+          <div>
+            <div class="panel">
+              <div class="panel-head"><h3>Your active investments</h3><span style="color:var(--text-mute);font-size:12px;">Live P/L</span></div>
+              <div id="activeList"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>Closed investments</h3></div>
+              <div id="closedList"></div>
+            </div>
+          </div>
+
+          <aside>
+            <div class="panel">
+              <h3 style="margin:0 0 14px;">New investment</h3>
+              <div class="field"><label>Shares to buy</label><input type="number" id="shares" min="0" step="any" value="10" /></div>
+              <div class="field"><label>Entry price</label><div id="entryPx" style="padding:11px 14px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid var(--border-strong);font-variant-numeric:tabular-nums;"></div></div>
+              <div class="field"><label>Total cost</label><div id="cost" style="padding:11px 14px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid var(--border-strong);font-variant-numeric:tabular-nums;"></div></div>
+              <div class="field"><label>Hold duration</label>
+                <select id="dur">${DURATIONS.map(d => `<option value="${d.id}">${d.label} · target +${(d.apr*100).toFixed(0)}% APR</option>`).join('')}</select>
+              </div>
+              <div class="field"><label>Projected payout at maturity</label><div id="proj" style="padding:11px 14px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid var(--border-strong);font-variant-numeric:tabular-nums;color:var(--success);font-weight:700;"></div></div>
+              <button id="buyBtn" class="btn btn-block btn-success">Buy SpaceX shares</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>`;
+
+  const spx = Market.ALL['SPACEX'];
+  const $ = (id) => document.getElementById(id);
+
+  function findDur(id) { return DURATIONS.find(d => d.id === id); }
+
+  function updateForm() {
+    $('entryPx').textContent = '$' + Market.fmtPrice(spx.price);
+    const sh = parseFloat($('shares').value) || 0;
+    const cost = sh * spx.price;
+    $('cost').textContent = '$' + Market.fmtPrice(cost);
+    const d = findDur($('dur').value);
+    const yrs = d.ms / (365 * 86400e3);
+    const bonus = cost * d.apr * yrs;
+    $('proj').textContent = '$' + Market.fmtPrice(cost + bonus) + '  (+$' + Market.fmtPrice(bonus) + ' bonus)';
+  }
+
+  function renderInvestments() {
+    const mine = App.Investments.list().map(i => ({
+      id: i.id, shares: Number(i.shares), entryPrice: Number(i.entry_price),
+      duration: i.duration, status: i.status,
+      maturesAt: new Date(i.matures_at).getTime(),
+      closedAt: i.closed_at ? new Date(i.closed_at).getTime() : null,
+      payout: Number(i.payout || 0),
+    }));
+    const active = mine.filter(i => i.status === 'active');
+    const closed = mine.filter(i => i.status !== 'active');
+
+    $('activeList').innerHTML = active.length === 0
+      ? '<p style="color:var(--text-mute);margin:0;">No active investments yet. Buy your first SpaceX share →</p>'
+      : `<div class="table-wrap"><table class="tbl"><thead><tr><th>Shares</th><th>Entry</th><th>Current</th><th>P/L</th><th>Matures</th><th></th></tr></thead><tbody>` +
+        active.map(i => {
+          const cur = spx.price;
+          const marketVal = cur * i.shares;
+          const cost = i.entryPrice * i.shares;
+          const d = findDur(i.duration);
+          const remaining = i.maturesAt - Date.now();
+          const matured = remaining <= 0;
+          const yrs = d.ms / (365 * 86400e3);
+          const fullBonus = cost * d.apr * yrs;
+          const elapsedFrac = Math.min(1, Math.max(0, 1 - remaining / d.ms));
+          const earnedBonus = fullBonus * elapsedFrac;
+          const pnl = (marketVal - cost) + earnedBonus;
+          const pnlPct = (pnl / cost) * 100;
+          const cls = pnl >= 0 ? 'up' : 'down';
+          const timeLbl = matured ? '<span style="color:var(--success);font-weight:700;">Ready</span>' : fmtRemaining(remaining);
+          return `<tr>
+            <td>${i.shares}</td>
+            <td>$${Market.fmtPrice(i.entryPrice)}</td>
+            <td data-cur>$${Market.fmtPrice(cur)}</td>
+            <td><span class="chg ${cls}">${pnl >= 0 ? '+' : ''}$${Market.fmtPrice(pnl)} (${pnlPct.toFixed(2)}%)</span></td>
+            <td>${timeLbl}</td>
+            <td><button class="btn btn-sm ${matured ? 'btn-success' : ''}" data-close="${i.id}">${matured ? 'Claim' : 'Sell now'}</button></td>
+          </tr>`;
+        }).join('') + '</tbody></table></div>';
+
+    $('closedList').innerHTML = closed.length === 0
+      ? '<p style="color:var(--text-mute);margin:0;">No closed investments.</p>'
+      : `<div class="table-wrap"><table class="tbl"><thead><tr><th>When</th><th>Shares</th><th>Cost</th><th>Payout</th><th>P/L</th></tr></thead><tbody>` +
+        closed.slice(0, 20).map(i => {
+          const pnl = i.payout - i.entryPrice * i.shares;
+          return `<tr>
+            <td>${new Date(i.closedAt).toLocaleString()}</td>
+            <td>${i.shares}</td>
+            <td>$${Market.fmtPrice(i.entryPrice * i.shares)}</td>
+            <td>$${Market.fmtPrice(i.payout)}</td>
+            <td><span class="chg ${pnl >= 0 ? 'up' : 'down'}">${pnl >= 0 ? '+' : ''}$${Market.fmtPrice(pnl)}</span></td>
+          </tr>`;
+        }).join('') + '</tbody></table></div>';
+  }
+
+  function fmtRemaining(ms) {
+    if (ms <= 0) return 'Ready';
+    const s = Math.floor(ms / 1000);
+    const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${sec}s`;
+    return `${sec}s`;
+  }
+
+  async function closeInvestment(id) {
+    const inv = App.Investments.list().find(x => x.id === id); if (!inv) return;
+    const shares = Number(inv.shares); const entryPrice = Number(inv.entry_price);
+    const maturesAt = new Date(inv.matures_at).getTime();
+    const cur = spx.price;
+    const cost = entryPrice * shares;
+    const d = findDur(inv.duration);
+    const remaining = maturesAt - Date.now();
+    const yrs = d.ms / (365 * 86400e3);
+    const fullBonus = cost * d.apr * yrs;
+    const elapsedFrac = Math.min(1, Math.max(0, 1 - remaining / d.ms));
+    const bonus = fullBonus * elapsedFrac;
+    const payout = cur * shares + bonus;
+    await App.Investments.close(id, cur, payout);
+    const user = App.Auth.getUser();
+    await App.Auth.updateUser({ balance: user.balance + payout });
+    await App.Orders.add({ symbol: 'SPACEX', side: 'sell', qty: shares, price: cur, total: payout });
+    $('navBalance').textContent = '$' + (user.balance + payout).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    App.toast(`Closed: +$${Market.fmtPrice(payout - cost)} (${((payout-cost)/cost*100).toFixed(2)}%)`);
+    renderInvestments();
+  }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-close]'); if (!b) return;
+    closeInvestment(b.dataset.close);
+  });
+
+  $('buyBtn').addEventListener('click', async () => {
+    const sh = parseFloat($('shares').value);
+    if (!sh || sh <= 0) return App.toast('Enter share quantity', 'error');
+    const user = App.Auth.getUser();
+    const cost = sh * spx.price;
+    if (cost > user.balance) return App.toast('Insufficient balance — deposit first', 'error');
+    const d = findDur($('dur').value);
+    await App.Investments.create({ shares: sh, entryPrice: spx.price, duration: d.id, maturesAt: Date.now() + d.ms });
+    await App.Auth.updateUser({ balance: user.balance - cost });
+    await App.Orders.add({ symbol: 'SPACEX', side: 'buy', qty: sh, price: spx.price, total: cost });
+    $('navBalance').textContent = '$' + (user.balance - cost).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    App.toast(`Invested in ${sh} SpaceX shares for ${d.label}`);
+    renderInvestments();
+  });
+
+  ['shares','dur'].forEach(id => $(id).addEventListener('input', updateForm));
+
+  function refreshLive() {
+    $('livePrice').textContent = '$' + Market.fmtPrice(spx.price);
+    const ch = $('liveChg');
+    ch.textContent = Market.fmtPct(spx.changePct);
+    ch.className = 'change ' + (spx.changePct >= 0 ? 'up' : 'down');
+    Market.drawSpark($('hero'), spx.history, spx.changePct >= 0 ? '#4ade80' : '#f87171');
+    updateForm();
+    // update active rows live
+    document.querySelectorAll('#activeList [data-cur]').forEach(td => {
+      App.animatePrice(td, spx.price, spx.prevPrice, (n) => '$' + Market.fmtPrice(n));
+    });
+  }
+  refreshLive();
+  renderInvestments();
+  document.addEventListener('market:tick', () => { refreshLive(); renderInvestments(); });
+}
+
+});
+</script>
+</body>
+</html>

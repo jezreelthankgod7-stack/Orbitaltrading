@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in to Orbital</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card">
+    <a href="/home.html" class="brand">
+      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 3l7 7-7 7v-4H3v-6h11V3z"/></svg></span>
+      Orbital
+    </a>
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in with your username or email.</p>
+    <form id="form" autocomplete="off">
+      <div class="field"><label>Username or email</label><input name="id" required /></div>
+      <div class="field"><label>Password</label><input name="password" type="password" required /></div>
+      <div class="err" id="err"></div>
+      <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+    </form>
+    <div class="auth-foot">Don't have an account? <a href="/register.html">Create one</a></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script src="app.js"></script>
+<script>
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const err = document.getElementById('err'); err.textContent = '';
+  try {
+    const u = await App.Auth.login(fd.get('id').trim(), fd.get('password'));
+    window.location.href = u.role === 'admin' ? '/admin.html' : '/dashboard.html';
+  } catch (ex) {
+    if (ex.suspended) { window.location.href = '/suspended.html'; return; }
+    err.textContent = ex.message;
+  }
+});
+</script>
+</body>
+</html>

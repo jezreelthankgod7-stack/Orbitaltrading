@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Withdraw — Orbital</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  .info-banner { background: rgba(106,166,255,.08); border: 1px solid rgba(106,166,255,.25); border-radius: 10px; padding: 14px 16px; font-size: 13px; color: var(--text-dim); display: flex; gap: 12px; align-items: flex-start; }
+  .timer-box { background: linear-gradient(135deg, rgba(255,184,107,.15), rgba(106,166,255,.08)); border: 1px solid var(--border-strong); border-radius: 12px; padding: 18px; display: flex; gap: 14px; align-items: center; margin-bottom: 18px; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script src="app.js"></script>
+<script src="dashboard-shell.js"></script>
+<script>
+App.ready.then(async () => {
+
+const s = renderShell({ active: 'withdraw', title: 'Withdraw funds' });
+if (s) {
+  document.getElementById('app').innerHTML = s.sidebar + `
+    <main class="main">${s.appbar}
+      <div class="page">
+        <div class="panel">
+          <div class="timer-box">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
+            <div>
+              <div style="font-weight:700;">Processing time: ~5 minutes</div>
+              <div style="color:var(--text-dim);font-size:13px;margin-top:2px;">Your withdrawal will be processed within 5 minutes. Thank you for your patience and cooperation.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+            <h3 style="margin:0;">Withdrawal request</h3>
+            <div style="text-align:right;">
+              <div style="font-size:11px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.1em;">Available balance</div>
+              <div style="font-size:18px;font-weight:800;">$${s.user.balance.toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+            </div>
+          </div>
+
+          <form id="wForm">
+            <div class="field">
+              <label>Withdrawal method</label>
+              <select name="coin" id="coin" required>
+                <option value="">Select cryptocurrency…</option>
+                <option value="BTC">Bitcoin (BTC)</option>
+                <option value="ETH">Ethereum (ERC-20)</option>
+                <option value="USDT">Tether (USDT — TRC-20)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Your wallet address</label>
+              <input name="address" required placeholder="Paste your wallet address" style="font-family:ui-monospace,'SF Mono',monospace;" />
+              <div style="font-size:11px;color:var(--text-mute);margin-top:6px;">⚠ Double-check this address. Transactions to wrong addresses cannot be reversed.</div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Amount (USD)</label><input type="number" name="amount" id="amount" min="20" step="any" required placeholder="100.00" /></div>
+              <div class="field"><label>You'll receive (est.)</label><div id="estimate" style="padding:11px 14px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid var(--border-strong);font-variant-numeric:tabular-nums;color:var(--text-dim);">—</div></div>
+            </div>
+
+            <div class="info-banner" style="margin-bottom:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;color:var(--primary);"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+              <span>A network fee of <strong>1.5%</strong> applies. Withdrawal Fee: <strong>$2000</strong> must be made to execute successful withdrawals. Processing takes approximately <strong>5 minutes</strong>.</span>
+            </div>
+
+            <button class="btn btn-primary btn-block" type="submit">Request withdrawal</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0;">Recent withdrawals</h3>
+          <div id="withdrawals"></div>
+        </div>
+      </div>
+    </main>`;
+
+  const amountEl = document.getElementById('amount');
+  const est = document.getElementById('estimate');
+  amountEl.addEventListener('input', () => {
+    const v = parseFloat(amountEl.value) || 0;
+    est.textContent = v > 0 ? '$' + (v * 0.985).toFixed(2) : '—';
+  });
+
+  function renderW() {
+    const list = App.Withdrawals.forUser();
+    const el = document.getElementById('withdrawals');
+    if (list.length === 0) { el.innerHTML = '<p style="color:var(--text-mute);margin:0;">No withdrawals yet.</p>'; return; }
+    el.innerHTML = `<table class="tbl"><thead><tr><th>When</th><th>Coin</th><th>Amount</th><th>To</th><th>Status</th></tr></thead><tbody>${
+      list.map(w => `<tr><td>${new Date(w.at).toLocaleString()}</td><td><strong>${w.coin}</strong></td><td>$${w.amount.toLocaleString()}</td><td style="font-family:ui-monospace,monospace;font-size:12px;">${w.address.slice(0,8)}…${w.address.slice(-6)}</td><td><span class="chg" style="background:rgba(255,184,107,.15);color:var(--accent);">${(w.status||'pending').toUpperCase()}</span></td></tr>`).join('')
+    }</tbody></table>`;
+  }
+  renderW();
+
+  document.getElementById('wForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const coin = fd.get('coin');
+    const address = fd.get('address').trim();
+    const amount = parseFloat(fd.get('amount'));
+    if (!coin) return App.toast('Choose a cryptocurrency', 'error');
+    if (address.length < 10) return App.toast('Invalid wallet address', 'error');
+    if (!amount || amount < 20) return App.toast('Minimum withdrawal is $20', 'error');
+    const user = App.Auth.getUser();
+    if (amount > user.balance) return App.toast('Insufficient balance', 'error');
+    try { await App.Withdrawals.create({ coin, address, amount }); }
+    catch (ex) { return App.toast(ex.message, 'error'); }
+    document.getElementById('navBalance').textContent = '$' + (user.balance - amount).toLocaleString(undefined,{maximumFractionDigits:2});
+    App.toast('Withdrawal request submitted — funds will arrive in ~50 minutes');
+    e.target.reset(); est.textContent = '—';
+    renderW();
+  });
+}
+
+});
+</script>
+</body>
+</html>

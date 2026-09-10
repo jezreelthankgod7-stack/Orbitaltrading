@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Orbital — SpaceX Investment Broker</title>
+<meta name="description" content="Invest in SpaceX, Tesla and crypto markets. Real-time prices, secure brokerage, powered by the future of space exploration." />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container topbar-inner">
+    <a href="/home.html" class="brand">
+      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 3l7 7-7 7v-4H3v-6h11V3z"/></svg></span>
+      Orbital
+    </a>
+    <nav class="nav-links">
+      <a href="#markets">Markets</a>
+      <a href="#about">About SpaceX</a>
+      <a href="#tesla">Tesla</a>
+      <a href="#team">Team</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="/login.html" class="btn btn-sm">Sign in</a>
+      <a href="/register.html" class="btn btn-sm btn-primary">Start investing</a>
+      <button class="hamburger" data-toggle-drawer aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer">
+  <a href="#markets" data-toggle-drawer>Markets</a>
+  <a href="#about" data-toggle-drawer>About SpaceX</a>
+  <a href="#tesla" data-toggle-drawer>Tesla</a>
+  <a href="#team" data-toggle-drawer>Team</a>
+  <a href="#contact" data-toggle-drawer>Contact</a>
+  <a href="/login.html">Sign in</a>
+  <a href="/register.html" style="background: var(--grad-primary); color: #06112a; border: none; font-weight: 700;">Start investing</a>
+</div>
+
+<!-- Live ticker -->
+<div class="ticker-strip">
+  <div class="ticker-track" id="ticker"></div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="eyebrow"><span class="dot"></span> Live markets · Open 24/7</span>
+      <h1 class="hero-title">Invest in the future of <span class="grad">space exploration</span></h1>
+      <p class="hero-sub">Trade SpaceX-related equities, Tesla, and crypto markets on a single platform built for the next generation of investors.</p>
+      <div class="hero-cta">
+        <a href="/register.html" class="btn btn-primary">Start investing →</a>
+        <a href="#about" class="btn">Learn about SpaceX</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="v">$180B+</div><div class="l">SpaceX Valuation</div></div>
+        <div class="hero-stat"><div class="v">7,000+</div><div class="l">Starlink Satellites</div></div>
+        <div class="hero-stat"><div class="v">400+</div><div class="l">Successful Launches</div></div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="orbit o1"></div>
+      <div class="orbit o2"></div>
+      <div class="orbit o3"></div>
+      <div class="planet"></div>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE MARKETS -->
+<section class="block" id="markets">
+  <div class="container">
+    <div class="section-head">
+      <h2>Live market snapshot</h2>
+      <p>Real-time prices across the assets that power the new space economy.</p>
+    </div>
+    <div class="markets-grid" id="snapshot"></div>
+  </div>
+</section>
+
+<!-- WHY SPACEX -->
+<section class="block" id="about" style="background: linear-gradient(180deg, transparent, rgba(106,166,255,.04), transparent);">
+  <div class="container">
+    <div class="section-head">
+      <h2>Why SpaceX matters</h2>
+      <p>Founded by Elon Musk in 2002, SpaceX has transformed from a scrappy startup into the world's most valuable private space company.</p>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg></div>
+        <h3>Starship & Starlink</h3>
+        <p>The fully reusable Starship is set to make Mars colonization feasible. Starlink already serves 5M+ subscribers across 100+ countries.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        <h3>NASA's primary partner</h3>
+        <p>SpaceX is NASA's top contractor for crew and cargo missions to the ISS — with the Crew Dragon and Falcon 9 setting the gold standard for reusability.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+        <h3>Explosive growth</h3>
+        <p>Valuation grew from $74B in 2021 to over $350B in 2024 — making it one of the most valuable private companies in history.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESLA -->
+<section class="block" id="tesla">
+  <div class="container split">
+    <div>
+      <span class="eyebrow">⚡ Sister company</span>
+      <h2>Tesla — the other Musk empire</h2>
+      <p>Tesla and SpaceX share more than a founder. They share talent, technology, and a relentless engineering culture. Investing in one is often a bet on the other.</p>
+      <ul class="bullet-list">
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Shared engineering DNA</strong> — battery tech, manufacturing, autonomy.</span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Optimus & Dojo</strong> — Tesla's AI compute could power future SpaceX missions.</span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span><strong>$1T+ market cap</strong> — the most liquid pure-play on the Musk thesis.</span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Public & tradeable today</strong> — list and trade TSLA on Orbital in seconds.</span></li>
+      </ul>
+    </div>
+    <div class="image-box">
+      <div style="position:absolute;inset:0;display:grid;place-items:center;font-size:140px;font-weight:900;letter-spacing:-.08em;background:linear-gradient(135deg,#ff4d4d,#ffb86b);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:.6;">T</div>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section class="block" id="team" style="background: linear-gradient(180deg, transparent, rgba(255,184,107,.04), transparent);">
+  <div class="container">
+    <div class="section-head">
+      <h2>The people behind the rockets</h2>
+      <p>SpaceX runs on the work of 13,000+ engineers led by some of the most respected names in aerospace.</p>
+    </div>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="avatar">EM</div>
+        <h4>Elon Musk</h4>
+        <div class="role">Founder & CEO</div>
+        <p>Founded SpaceX in 2002 with the goal of reducing space transportation costs and enabling the colonization of Mars. Also CEO of Tesla, xAI, and owner of X.</p>
+      </div>
+      <div class="team-card">
+        <div class="avatar">GS</div>
+        <h4>Gwynne Shotwell</h4>
+        <div class="role">President & COO</div>
+        <p>Joined SpaceX in 2002 as employee #7. Runs the company's day-to-day operations and has been the driving force behind its commercial success.</p>
+      </div>
+      <div class="team-card">
+        <div class="avatar">MJ</div>
+        <h4>Mark Juncosa</h4>
+        <div class="role">VP, Vehicle Engineering</div>
+        <p>Leads engineering on Falcon, Dragon, and Starship. Considered one of the most influential aerospace engineers of his generation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="block">
+  <div class="container">
+    <div class="cta-banner">
+      <h2>Ready to invest in the future?</h2>
+      <p>Open an account in under a minute. No paperwork. No minimum deposit.</p>
+      <a href="/register.html" class="btn btn-primary">Create free account →</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="contact">
+  <div class="container footer-inner">
+    <div>
+      <div class="brand" style="margin-bottom:10px;">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 3l7 7-7 7v-4H3v-6h11V3z"/></svg></span>
+        Orbital
+      </div>
+      <div>© 2026 Orbital Brokerage. All rights reserved.</div>
+      <div style="margin-top:8px;font-size:12px;">support@orbital.invest · +1 (415) 555-0123 · San Francisco, CA</div>
+    </div>
+    <div class="footer-links">
+      <a href="#about">About</a>
+      <a href="#tesla">Tesla</a>
+      <a href="#team">Team</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="market-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supa.js"></script>
+<script src="app.js"></script>
+<script>
+  // Build ticker
+  const tickerEl = document.getElementById('ticker');
+  const all = [...Market.INSTRUMENTS.crypto, ...Market.INSTRUMENTS.stocks, ...Market.INSTRUMENTS.forex];
+  function buildTicker() {
+    const items = all.concat(all).map(i => `
+      <div class="ticker-item" data-tsym="${i.sym}">
+        <span class="sym">${i.sym}</span>
+        <span class="px">${Market.fmtPrice(i.price)}</span>
+        <span class="chg ${i.changePct >= 0 ? 'up' : 'down'}">${Market.fmtPct(i.changePct)}</span>
+      </div>`).join('');
+    tickerEl.innerHTML = items;
+  }
+  buildTicker();
+
+  // Snapshot grid
+  const snap = document.getElementById('snapshot');
+  const featured = [
+    Market.ALL['TSLA'], Market.ALL['BTC'], Market.ALL['RKLB'], Market.ALL['ETH'],
+    Market.ALL['ASTS'], Market.ALL['SOL'], Market.ALL['NVDA'], Market.ALL['EUR/USD'],
+  ];
+  function buildSnapshot() {
+    snap.innerHTML = featured.map(i => `
+      <div class="market-tile" data-snap="${i.sym}">
+        <div class="sym-row">
+          <div><div class="sym">${i.sym}</div><div class="name">${i.name}</div></div>
+          <div class="change ${i.changePct >= 0 ? 'up' : 'down'}" style="padding:3px 8px;border-radius:6px;">${Market.fmtPct(i.changePct)}</div>
+        </div>
+        <div class="price" data-price>${Market.fmtPrice(i.price)}</div>
+        <canvas class="spark"></canvas>
+      </div>`).join('');
+    document.querySelectorAll('.market-tile').forEach(t => {
+      const sym = t.dataset.snap;
+      const c = t.querySelector('canvas');
+      const i = Market.ALL[sym];
+      Market.drawSpark(c, i.history, i.changePct >= 0 ? '#4ade80' : '#f87171');
+    });
+  }
+  buildSnapshot();
+
+  document.addEventListener('market:tick', () => {
+    // ticker
+    document.querySelectorAll('.ticker-item').forEach(el => {
+      const i = Market.ALL[el.dataset.tsym]; if (!i) return;
+      el.querySelector('.px').textContent = Market.fmtPrice(i.price);
+      const c = el.querySelector('.chg');
+      c.textContent = Market.fmtPct(i.changePct);
+      c.className = 'chg ' + (i.changePct >= 0 ? 'up' : 'down');
+    });
+    // snapshot
+    document.querySelectorAll('.market-tile').forEach(t => {
+      const i = Market.ALL[t.dataset.snap];
+      const p = t.querySelector('[data-price]');
+      App.animatePrice(p, i.price, i.prevPrice, Market.fmtPrice);
+      const c = t.querySelector('canvas');
+      Market.drawSpark(c, i.history, i.changePct >= 0 ? '#4ade80' : '#f87171');
+      const ch = t.querySelector('.change');
+      ch.textContent = Market.fmtPct(i.changePct);
+      ch.className = 'change ' + (i.changePct >= 0 ? 'up' : 'down');
+    });
+  });
+</script>
+</body>
+</html>
